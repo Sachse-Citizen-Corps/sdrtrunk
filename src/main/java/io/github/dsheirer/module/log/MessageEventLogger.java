@@ -37,6 +37,7 @@ public class MessageEventLogger extends EventLogger implements IMessageListener,
     {
         super(logDirectory, fileNameSuffix, frequency);
         mType = type;
+        hashValue = Integer.toString(fileNameSuffix.hashCode()) + " ";
     }
 
     @Override
@@ -50,6 +51,8 @@ public class MessageEventLogger extends EventLogger implements IMessageListener,
     {
     }
 
+    private String hashValue = "";
+
     @Override
     public void receive(IMessage message)
     {
@@ -61,6 +64,30 @@ public class MessageEventLogger extends EventLogger implements IMessageListener,
         sb.append(message.toString());
 
         write(sb.toString());
+
+        //Customized to send important log information as an UDP packet to be processed by another application on same machine.
+        String msg = sb.toString();
+        if(msg.indexOf("SYNC LOSS") > 0  ||  (message.isValid() && (
+                msg.indexOf("NET_STATUS_BCAST") > 0 ||
+                        msg.indexOf("RFSS_STATUS_BCST") > 0 ||
+                        msg.indexOf("ACK_RESPONSE_FNE") > 0 ||
+                        msg.indexOf("DE_REGIST_ACK") > 0 ||
+                        msg.indexOf("GRP_AFFIL_RESP") > 0 ||
+                        msg.indexOf("GRP_VCH_GRANT") > 0 ||
+                        msg.indexOf("GRP_VCH_GRNT_UPD") > 0 ||
+                        msg.indexOf("LOCN_REG_RESPONS") > 0 ||
+                        msg.indexOf("SNDCP_DCH_GRANT") > 0 ||
+                        msg.indexOf("UNIT_REG_RESPONS") > 0 ))) {
+
+            try {
+                DatagramSocket clientSocket = new DatagramSocket();
+                InetAddress address = InetAddress.getByName("localhost");
+                byte[] sendData = (hashValue + message.toString()).getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, 7378);
+                clientSocket.send(sendPacket);
+            } catch (Exception e) {
+
+            }
     }
 
     @Override
