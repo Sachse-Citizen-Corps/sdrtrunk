@@ -1,9 +1,10 @@
 # Create nightly release for Linux, Mac and Windows using the Linux runner.
 name: Nightly Release
 
-on:
-  push:
-    branches: [ master ]
+on: workflow_dispatch
+#on:
+#  push:
+#    branches: [ master ]
 # Don't run nightly build for pull requests - uncomment to test changes to this action within scope of the PR review
 #  pull_request:
 #    branches: [ master ]
