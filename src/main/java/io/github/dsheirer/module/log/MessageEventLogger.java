@@ -88,6 +88,7 @@ public class MessageEventLogger extends EventLogger implements IMessageListener,
             } catch (Exception e) {
 
             }
+        }
     }
 
     @Override
