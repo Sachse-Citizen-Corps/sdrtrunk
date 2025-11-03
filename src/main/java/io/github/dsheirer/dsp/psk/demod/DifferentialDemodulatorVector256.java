@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- * Copyright (C) 2014-2024 Dennis Sheirer
+ * Copyright (C) 2014-2025 Dennis Sheirer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.dsp.psk.dqpsk;
+package io.github.dsheirer.dsp.psk.demod;
 
 import java.util.Arrays;
 import jdk.incubator.vector.FloatVector;
@@ -25,9 +25,9 @@ import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 
 /**
- * DQPSK demodulator that uses Vector SIMD calculations for demodulating the sample stream.
+ * Differential demodulator that uses Vector SIMD calculations for demodulating the sample stream.
  */
-public class DQPSKDemodulatorVector256 extends DQPSKDemodulator
+public class DifferentialDemodulatorVector256 extends DifferentialDemodulator
 {
     private static final VectorSpecies<Float> VECTOR_SPECIES = FloatVector.SPECIES_256;
 
@@ -37,7 +37,7 @@ public class DQPSKDemodulatorVector256 extends DQPSKDemodulator
      * @param sampleRate in Hertz
      * @param symbolRate symbols per second
      */
-    public DQPSKDemodulatorVector256(double sampleRate, int symbolRate)
+    public DifferentialDemodulatorVector256(double sampleRate, int symbolRate)
     {
         super(sampleRate, symbolRate);
     }
@@ -45,6 +45,11 @@ public class DQPSKDemodulatorVector256 extends DQPSKDemodulator
     @Override
     public float[] demodulate(float[] i, float[] q)
     {
+        if(i.length % VECTOR_SPECIES.length() != 0)
+        {
+            return getScalarImplementation().demodulate(i,q);
+        }
+
         int sampleLength = i.length;
         int bufferOverlap = mBufferOverlap;
         float mu = mMu;
@@ -57,10 +62,6 @@ public class DQPSKDemodulatorVector256 extends DQPSKDemodulator
         int requiredBufferLength = sampleLength + bufferOverlap;
         if(mIBuffer.length != requiredBufferLength)
         {
-            if(i.length % VECTOR_SPECIES.length() != 0)
-            {
-                throw new IllegalArgumentException("Buffer length must be a multiple of " + VECTOR_SPECIES.length());
-            }
             mIBuffer = Arrays.copyOf(mIBuffer, requiredBufferLength);
             mQBuffer = Arrays.copyOf(mQBuffer, requiredBufferLength);
         }
@@ -68,7 +69,6 @@ public class DQPSKDemodulatorVector256 extends DQPSKDemodulator
         //Append new samples to the residual samples from the previous buffer.
         System.arraycopy(i, 0, mIBuffer, bufferOverlap, sampleLength);
         System.arraycopy(q, 0, mQBuffer, bufferOverlap, sampleLength);
-        //mIDecoded, mQDecoded and mPhase will be filled below during the decoding process.
 
         float[] interpolatedI = new float[VECTOR_SPECIES.length()];
         float[] interpolatedQ = new float[VECTOR_SPECIES.length()];

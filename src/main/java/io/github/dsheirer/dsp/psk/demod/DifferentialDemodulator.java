@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- * Copyright (C) 2014-2024 Dennis Sheirer
+ * Copyright (C) 2014-2025 Dennis Sheirer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,16 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.dsp.psk.dqpsk;
+package io.github.dsheirer.dsp.psk.demod;
 
 import io.github.dsheirer.dsp.filter.interpolator.Interpolator;
 import io.github.dsheirer.dsp.filter.interpolator.InterpolatorFactory;
 import io.github.dsheirer.dsp.fm.IDemodulator;
 
 /**
- * DQPSK demodulator base class
+ * Differential demodulator base class
  */
-public abstract class DQPSKDemodulator implements IDemodulator
+public abstract class DifferentialDemodulator implements IDemodulator
 {
     private int mSymbolRate;
     private float mSampleRate;
@@ -37,13 +37,14 @@ public abstract class DQPSKDemodulator implements IDemodulator
     protected int mBufferOverlap;
     protected int mInterpolationOffset;
     protected final Interpolator mInterpolator = InterpolatorFactory.getInterpolator();
+    private DifferentialDemodulatorScalar mScalar;
 
    /**
      * Constructor
      * @param sampleRate in Hertz
      * @param symbolRate symbols per second
      */
-    public DQPSKDemodulator(double sampleRate, int symbolRate)
+    public DifferentialDemodulator(double sampleRate, int symbolRate)
     {
         mSampleRate = (float) sampleRate;
         mSymbolRate = symbolRate;
@@ -51,6 +52,26 @@ public abstract class DQPSKDemodulator implements IDemodulator
         mMu = mSamplesPerSymbol % 1; //Fractional part of the samples per symbol rate
         mInterpolationOffset = (int) Math.floor(mSamplesPerSymbol) - 4; //Interpolate at the middle of 8x samples
         mBufferOverlap = (int) Math.floor(mSamplesPerSymbol) + 4;
+
+        while(mInterpolationOffset < 0)
+        {
+            mInterpolationOffset++;
+            mBufferOverlap++;
+        }
+    }
+
+    /**
+     * Scalar implementation for fallback when the sample buffer size is not compatible with the vector implementation.
+     * @return scalar implementation lazy instantiated when needed.
+     */
+    protected DifferentialDemodulatorScalar getScalarImplementation()
+    {
+        if(mScalar == null)
+        {
+            mScalar = new DifferentialDemodulatorScalar(mSampleRate, mSymbolRate);
+        }
+
+        return mScalar;
     }
 
     /**

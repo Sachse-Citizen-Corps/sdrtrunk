@@ -17,33 +17,23 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.dsp.fm;
+package io.github.dsheirer.module.decode.dmr.sync.visualizer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.CountDownLatch;
 
 /**
- * FM demodulator that uses JDK 17+ SIMD vector intrinsics
+ * Interface for receiving sync detection results from a demodulated I/Q stream
  */
-public abstract class VectorFMDemodulator implements IDemodulator
+public interface ISyncResultsListener
 {
-    private static final Logger mLog = LoggerFactory.getLogger(VectorFMDemodulator.class);
-    private ScalarFMDemodulator mScalar;
-
-    public VectorFMDemodulator()
-    {
-    }
-
     /**
-     * Access the scalar implementation when the sample buffer size is not a multiple of the vector size.
+     * Receive results
+     * @param symbols for the detected sync
+     * @param sync pattern symbols (ideal)
+     * @param samples demodulated samples
+     * @param syncIntervals for timing of each symbol in the samples array
+     * @param label to display in the UI
+     * @param release that pauses execution until the user acknowledges the displayed sync results.  Decrement the latch to release.
      */
-    protected ScalarFMDemodulator getScalarImplementation()
-    {
-        if(mScalar == null)
-        {
-            mScalar = new ScalarFMDemodulator();
-        }
-
-        return mScalar;
-    }
+    void receive(float[] symbols, float[] sync, float[] samples, float[] syncIntervals, String label, CountDownLatch release);
 }

@@ -17,33 +17,24 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.dsp.fm;
+package io.github.dsheirer.alias.id.talkgroup;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.github.dsheirer.protocol.Protocol;
 
 /**
- * FM demodulator that uses JDK 17+ SIMD vector intrinsics
+ * Streaming talkgroup alias.  For streamed audio metadata, this value is used to replace the decoded talkgroup or TO
+ * value with an alias value when there are talkgroup collisions resulting from streaming multiple channels to the
+ * same stream.  This is common in P25 conventional repeater setups where each radio channel is using talkgroup 1.
  */
-public abstract class VectorFMDemodulator implements IDemodulator
+public class StreamAsTalkgroup extends Talkgroup
 {
-    private static final Logger mLog = LoggerFactory.getLogger(VectorFMDemodulator.class);
-    private ScalarFMDemodulator mScalar;
-
-    public VectorFMDemodulator()
+    public StreamAsTalkgroup(int talkgroup)
     {
+        super(Protocol.UNKNOWN, talkgroup);
     }
 
-    /**
-     * Access the scalar implementation when the sample buffer size is not a multiple of the vector size.
-     */
-    protected ScalarFMDemodulator getScalarImplementation()
+    public StreamAsTalkgroup()
     {
-        if(mScalar == null)
-        {
-            mScalar = new ScalarFMDemodulator();
-        }
-
-        return mScalar;
+        //No arg JAXB constructor
     }
 }
