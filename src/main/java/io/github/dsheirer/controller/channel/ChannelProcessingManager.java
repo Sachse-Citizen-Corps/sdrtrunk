@@ -21,6 +21,10 @@ package io.github.dsheirer.controller.channel;
 import com.google.common.eventbus.Subscribe;
 import io.github.dsheirer.alias.AliasModel;
 import io.github.dsheirer.audio.AudioSegment;
+import io.github.dsheirer.audio.broadcast.BroadcastConfiguration;
+import io.github.dsheirer.audio.broadcast.BroadcastServerType;
+import io.github.dsheirer.audio.broadcast.mqtt.MQTTConfiguration;
+import io.github.dsheirer.audio.broadcast.mqtt.MQTTNowPlayingManager;
 import io.github.dsheirer.channel.metadata.ChannelAndMetadata;
 import io.github.dsheirer.channel.metadata.ChannelMetadata;
 import io.github.dsheirer.channel.metadata.ChannelMetadataModel;
@@ -87,6 +91,7 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
 
     private ChannelMapModel mChannelMapModel;
     private ChannelMetadataModel mChannelMetadataModel;
+    private MQTTNowPlayingManager mMQTTNowPlayingManager;
     private EventLogManager mEventLogManager;
     private TunerManager mTunerManager;
     private AliasModel mAliasModel;
@@ -112,6 +117,10 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
         mAliasModel = aliasModel;
         mUserPreferences = userPreferences;
         mChannelMetadataModel = new ChannelMetadataModel();
+        mMQTTNowPlayingManager = new MQTTNowPlayingManager();
+
+        // Register MQTT manager to receive channel metadata updates
+        mChannelMetadataModel.setChannelAddListener(mMQTTNowPlayingManager);
     }
 
     /**
@@ -120,6 +129,44 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
     public ChannelMetadataModel getChannelMetadataModel()
     {
         return mChannelMetadataModel;
+    }
+
+    /**
+     * Initializes MQTT Now Playing publishers with broadcast configurations
+     * @param configurations list of broadcast configurations
+     */
+    public void initializeMQTTPublishers(List<BroadcastConfiguration> configurations)
+    {
+        if (mMQTTNowPlayingManager != null)
+        {
+            List<MQTTConfiguration> mqttConfigs = new ArrayList<>();
+
+            for (BroadcastConfiguration config : configurations)
+            {
+                if (config.getBroadcastServerType() == BroadcastServerType.MQTT_NOW_PLAYING &&
+                    config instanceof MQTTConfiguration)
+                {
+                    mqttConfigs.add((MQTTConfiguration) config);
+                }
+            }
+
+            if (!mqttConfigs.isEmpty())
+            {
+                mMQTTNowPlayingManager.addConfigurations(mqttConfigs);
+                mLog.info("Initialized " + mqttConfigs.size() + " MQTT Now Playing publisher(s)");
+            }
+        }
+    }
+
+    /**
+     * Stops all MQTT publishers
+     */
+    public void stopMQTTPublishers()
+    {
+        if (mMQTTNowPlayingManager != null)
+        {
+            mMQTTNowPlayingManager.stop();
+        }
     }
 
     /**
@@ -617,6 +664,12 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
             {
                 for(ChannelMetadata channelMetadata: removed.getChannelState().getChannelMetadata())
                 {
+                    // Notify MQTT manager before removing from model
+                    if(mMQTTNowPlayingManager != null)
+                    {
+                        mMQTTNowPlayingManager.removeChannel(channelMetadata);
+                    }
+
                     getChannelMetadataModel().remove(channelMetadata);
                 }
             }
@@ -701,6 +754,9 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
      */
     public void shutdown()
     {
+        // Stop MQTT publishers first
+        stopMQTTPublishers();
+
         List<ScheduledFuture<?>> delayedTasks = new ArrayList<>(mDelayedChannelStartTasks);
 
         for(ScheduledFuture<?> delayedTask: delayedTasks)

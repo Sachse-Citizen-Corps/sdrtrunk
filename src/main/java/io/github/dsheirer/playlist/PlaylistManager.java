@@ -405,6 +405,9 @@ public class PlaylistManager implements Listener<ChannelEvent>
 
             mBroadcastModel.addBroadcastConfigurations(playlist.getBroadcastConfigurations());
 
+            // Initialize MQTT Now Playing publishers with broadcast configurations
+            mChannelProcessingManager.initializeMQTTPublishers(playlist.getBroadcastConfigurations());
+
             mChannelMapModel.addChannelMaps(playlist.getChannelMaps());
 
             //Channel model has to be loaded last since it will auto-start channels that are enabled

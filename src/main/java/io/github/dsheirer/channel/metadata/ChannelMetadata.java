@@ -63,7 +63,7 @@ public class ChannelMetadata implements Listener<IdentifierUpdateNotification>, 
     private List<Alias> mToIdentifierAliases;
     private Integer mTimeslot;
 
-    private IChannelMetadataUpdateListener mIChannelMetadataUpdateListener;
+    private List<IChannelMetadataUpdateListener> mChannelMetadataUpdateListeners = new ArrayList<>();
     private AliasModel mAliasModel;
     private AliasList mAliasList;
 
@@ -282,15 +282,37 @@ public class ChannelMetadata implements Listener<IdentifierUpdateNotification>, 
      */
     public void setUpdateEventListener(IChannelMetadataUpdateListener listener)
     {
-        mIChannelMetadataUpdateListener = listener;
+        if(listener != null && !mChannelMetadataUpdateListeners.contains(listener))
+        {
+            mChannelMetadataUpdateListeners.add(listener);
+        }
     }
 
     /**
-     * Deregisters the listener from receiving field update events
+     * Adds a listener for receiving field update events
+     */
+    public void addUpdateEventListener(IChannelMetadataUpdateListener listener)
+    {
+        if(listener != null && !mChannelMetadataUpdateListeners.contains(listener))
+        {
+            mChannelMetadataUpdateListeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a specific listener from receiving field update events
+     */
+    public void removeUpdateEventListener(IChannelMetadataUpdateListener listener)
+    {
+        mChannelMetadataUpdateListeners.remove(listener);
+    }
+
+    /**
+     * Deregisters all listeners from receiving field update events
      */
     public void removeUpdateEventListener()
     {
-        mIChannelMetadataUpdateListener = null;
+        mChannelMetadataUpdateListeners.clear();
     }
 
     /**
@@ -300,9 +322,9 @@ public class ChannelMetadata implements Listener<IdentifierUpdateNotification>, 
      */
     private void broadcastUpdate(ChannelMetadataField field)
     {
-        if(mIChannelMetadataUpdateListener != null)
+        for(IChannelMetadataUpdateListener listener : mChannelMetadataUpdateListeners)
         {
-            mIChannelMetadataUpdateListener.updated(this, field);
+            listener.updated(this, field);
         }
     }
 
