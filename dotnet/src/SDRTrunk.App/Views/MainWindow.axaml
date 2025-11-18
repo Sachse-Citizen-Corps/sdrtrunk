@@ -1,0 +1,142 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SDRTrunk.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
+        x:Class="SDRTrunk.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="SDRTrunk - Software Defined Radio Decoder"
+        Width="1280" Height="720">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open Playlist" Command="{Binding OpenPlaylistCommand}" />
+                <MenuItem Header="_Save Playlist" Command="{Binding SavePlaylistCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Spectrum Display" Command="{Binding ShowSpectrumCommand}" />
+                <MenuItem Header="_Channel Events" Command="{Binding ShowChannelEventsCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Preferences" Command="{Binding ShowPreferencesCommand}" />
+                <MenuItem Header="Tuner _Manager" Command="{Binding ShowTunerManagerCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Command="{Binding ShowAboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#F0F0F0" Padding="8,4">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding TunerStatus}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                <TextBlock Grid.Column="2" Text="{Binding DecoderStatus}" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid ColumnDefinitions="250,*">
+            <!-- Left Panel - Channel List -->
+            <Border Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="0,0,1,0" Background="White">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                             Text="Channels"
+                             FontSize="16"
+                             FontWeight="Bold"
+                             Padding="8"
+                             Background="#E0E0E0" />
+
+                    <ListBox Items="{Binding Channels}"
+                           SelectedItem="{Binding SelectedChannel}"
+                           Padding="4">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="10" Height="10"
+                                           Fill="{Binding IsActiveColor}"
+                                           VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Right Panel - Content Area -->
+            <Grid Grid.Column="1" RowDefinitions="*,Auto">
+                <!-- Spectrum Display Area -->
+                <Border Grid.Row="0" Background="Black" Margin="4">
+                    <Grid>
+                        <TextBlock Text="Spectrum Display (Coming Soon)"
+                                 Foreground="White"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 FontSize="24" />
+                    </Grid>
+                </Border>
+
+                <!-- Control Panel -->
+                <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#CCCCCC" BorderThickness="0,1,0,0" Padding="8">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Channel Details" FontWeight="Bold" FontSize="14" />
+
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto"
+                            ColumnGap="8" RowGap="8">
+
+                            <!-- Frequency -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Frequency:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding SelectedChannel.Frequency}"
+                                   IsEnabled="{Binding ChannelSelected}" />
+
+                            <!-- Decoder Type -->
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Decoder:" VerticalAlignment="Center" Margin="16,0,0,0" />
+                            <ComboBox Grid.Row="0" Grid.Column="3"
+                                    SelectedItem="{Binding SelectedChannel.DecoderType}"
+                                    IsEnabled="{Binding ChannelSelected}"
+                                    Width="150">
+                                <ComboBoxItem Content="NBFM" />
+                                <ComboBoxItem Content="AM" />
+                                <ComboBoxItem Content="P25" />
+                                <ComboBoxItem Content="DMR" />
+                            </ComboBox>
+
+                            <!-- Bandwidth -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Bandwidth:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding SelectedChannel.Bandwidth}"
+                                   IsEnabled="{Binding ChannelSelected}" />
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
+                                      Orientation="Horizontal"
+                                      Spacing="8"
+                                      HorizontalAlignment="Right">
+                                <Button Content="Start"
+                                      Command="{Binding StartChannelCommand}"
+                                      IsEnabled="{Binding CanStartChannel}"
+                                      Width="80" />
+                                <Button Content="Stop"
+                                      Command="{Binding StopChannelCommand}"
+                                      IsEnabled="{Binding CanStopChannel}"
+                                      Width="80" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
