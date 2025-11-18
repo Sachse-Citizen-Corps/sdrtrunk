@@ -2,18 +2,24 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using ReactiveUI;
 using SDRTrunk.Models;
+using SDRTrunk.Tuners.Management;
+using Microsoft.Extensions.Logging;
 
 namespace SDRTrunk.App.ViewModels;
 
 public class MainWindowViewModel : ReactiveObject
 {
+    private readonly TunerManager _tunerManager;
+    private readonly ILogger<MainWindowViewModel>? _logger;
     private string _statusMessage = "Ready";
     private string _tunerStatus = "No tuner connected";
     private string _decoderStatus = "No channels active";
     private Channel? _selectedChannel;
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(TunerManager tunerManager, ILogger<MainWindowViewModel>? logger = null)
     {
+        _tunerManager = tunerManager ?? throw new ArgumentNullException(nameof(tunerManager));
+        _logger = logger;
         Channels = new ObservableCollection<Channel>
         {
             new Channel
@@ -121,9 +127,40 @@ public class MainWindowViewModel : ReactiveObject
         StatusMessage = "Opening preferences...";
     }
 
-    private void OnShowTunerManager()
+    private async void OnShowTunerManager()
     {
-        StatusMessage = "Opening tuner manager...";
+        StatusMessage = "Discovering tuners...";
+        TunerStatus = "Searching for devices...";
+
+        try
+        {
+            // Discover tuners
+            var count = await _tunerManager.DiscoverTunersAsync();
+
+            if (count > 0)
+            {
+                // Try to connect to all discovered tuners
+                var connected = await _tunerManager.ConnectAllTunersAsync();
+
+                TunerStatus = $"{connected} of {count} tuner(s) connected";
+                StatusMessage = $"Found {count} tuner(s), {connected} connected";
+
+                _logger?.LogInformation("Tuner discovery complete: {Count} found, {Connected} connected",
+                    count, connected);
+            }
+            else
+            {
+                TunerStatus = "No tuners found";
+                StatusMessage = "No SDR tuners detected. Please connect a device.";
+                _logger?.LogWarning("No tuners found during discovery");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error during tuner discovery");
+            TunerStatus = "Tuner discovery failed";
+            StatusMessage = $"Error discovering tuners: {ex.Message}";
+        }
     }
 
     private void OnShowAbout()

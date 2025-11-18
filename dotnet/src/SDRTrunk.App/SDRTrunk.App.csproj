@@ -29,6 +29,7 @@
     <ProjectReference Include="..\SDRTrunk.Models\SDRTrunk.Models.csproj" />
     <ProjectReference Include="..\SDRTrunk.DSP\SDRTrunk.DSP.csproj" />
     <ProjectReference Include="..\SDRTrunk.Decoders\SDRTrunk.Decoders.csproj" />
+    <ProjectReference Include="..\SDRTrunk.Tuners\SDRTrunk.Tuners.csproj" />
   </ItemGroup>
 
 </Project>

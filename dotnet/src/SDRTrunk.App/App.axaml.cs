@@ -7,6 +7,7 @@ using Serilog;
 using SDRTrunk.App.ViewModels;
 using SDRTrunk.App.Views;
 using SDRTrunk.Core.Services;
+using SDRTrunk.Tuners.Management;
 
 namespace SDRTrunk.App;
 
@@ -54,6 +55,7 @@ public partial class App : Application
         // Core services
         services.AddSingleton<IEventBus, EventBus>();
         services.AddSingleton<IConfigurationService, ConfigurationService>();
+        services.AddSingleton<TunerManager>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();
