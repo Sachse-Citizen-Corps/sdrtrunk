@@ -67,6 +67,10 @@ public class ScramblingSequence
      */
     public boolean update(int wacn, int system, int nac)
     {
+        System.out.println("SCRAMBLE_DEBUG: wacn=" + wacn + "/0x" + Integer.toHexString(wacn).toUpperCase() +
+            " system=" + system + "/0x" + Integer.toHexString(system).toUpperCase() +
+            " nac=" + nac + "/0x" + Integer.toHexString(nac).toUpperCase() +
+            " seed=0x" + Long.toHexString(((long)(0xFFFFF & wacn) << 24) + ((0xFFF & system) << 12) + (0xFFF & nac)).toUpperCase());
         if(!mShiftRegister.isCurrent(wacn, system, nac))
         {
             mScramblingSegments.clear();
