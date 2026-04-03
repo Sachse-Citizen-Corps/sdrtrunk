@@ -2,12 +2,6 @@
 name: Nightly Release
 
 on: workflow_dispatch
-#on:
-#  push:
-#    branches: [ master ]
-# Don't run nightly build for pull requests - uncomment to test changes to this action within scope of the PR review
-#  pull_request:
-#    branches: [ master ]
 
 jobs:
   nightly:
@@ -38,11 +32,9 @@ jobs:
           echo -e "ref: $GITHUB_REF \ncommit: $GITHUB_SHA\nbuild: $(date +"%Y-%m-%dT%H:%M:%SZ")" > build/image/build_info.txt
 
       - name: Add build artifacts to nightly release
-        uses: pyTooling/Actions/releaser@main
+        uses: softprops/action-gh-release@v2
         with:
-          tag: nightly
-          rm: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: nightly
           files: |
             build/image/*.zip
             build/image/build_info.txt
